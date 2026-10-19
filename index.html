@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOLONG SYSTEM</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    color: #0ff;
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* ===== BACKGROUND LINES ===== */
+  .bg-lines { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .line {
+    position: absolute;
+    background: linear-gradient(90deg, transparent, #0ff, transparent);
+    height: 1px; width: 100%; opacity: 0.3;
+    animation: scan 3s linear infinite;
+  }
+  .line:nth-child(1) { top: 10%; animation-delay: 0s; }
+  .line:nth-child(2) { top: 25%; animation-delay: 0.5s; }
+  .line:nth-child(3) { top: 40%; animation-delay: 1s; }
+  .line:nth-child(4) { top: 55%; animation-delay: 1.5s; }
+  .line:nth-child(5) { top: 70%; animation-delay: 2s; }
+  .line:nth-child(6) { top: 85%; animation-delay: 2.5s; }
+  @keyframes scan { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+  .vline {
+    position: absolute; width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, #0ff, transparent);
+    opacity: 0.15; animation: vscan 4s linear infinite;
+  }
+  .vline:nth-child(7) { left: 15%; animation-delay: 0s; }
+  .vline:nth-child(8) { left: 35%; animation-delay: 1s; }
+  .vline:nth-child(9) { left: 55%; animation-delay: 2s; }
+  .vline:nth-child(10) { left: 75%; animation-delay: 3s; }
+  @keyframes vscan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
+
+  /* ===== GEARS ===== */
+  .gear {
+    position: fixed; z-index: 0; opacity: 0.15; color: #0ff;
+    font-size: 80px; animation: spin 8s linear infinite;
+  }
+  .gear.g1 { top: 5%; left: 5%; font-size: 100px; animation-duration: 12s; }
+  .gear.g2 { bottom: 8%; right: 6%; font-size: 70px; animation-direction: reverse; }
+  .gear.g3 { top: 60%; left: 3%; font-size: 50px; animation-duration: 6s; }
+  .gear.g4 { top: 15%; right: 10%; font-size: 60px; animation-direction: reverse; animation-duration: 10s; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  /* ===== SPARKS ===== */
+  .spark {
+    position: fixed; width: 3px; height: 3px; background: #0ff;
+    border-radius: 50%; box-shadow: 0 0 8px #0ff, 0 0 16px #0ff;
+    animation: float 4s linear infinite; z-index: 0; opacity: 0.6;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 1; } 90% { opacity: 1; }
+    100% { transform: translateY(-10vh) translateX(50px); opacity: 0; }
+  }
+
+  /* ===== CONTAINER ===== */
+  .container {
+    position: relative; z-index: 10; width: 100%;
+    max-width: 520px; padding: 20px;
+    max-height: 95vh; overflow-y: auto;
+  }
+  .container::-webkit-scrollbar { width: 6px; }
+  .container::-webkit-scrollbar-thumb { background: #0ff; border-radius: 3px; }
+  .container::-webkit-scrollbar-track { background: rgba(0,255,255,0.05); }
+
+  .screen { display: none; animation: fadeIn 0.5s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== BOX ===== */
+  .box {
+    background: rgba(0, 20, 25, 0.85);
+    border: 1px solid #0ff; border-radius: 8px;
+    padding: 30px 25px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.05);
+    position: relative; overflow: hidden;
+  }
+  .box::before {
+    content: ''; position: absolute; top: 0; left: -100%;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, #0ff, transparent);
+    animation: topLine 2s linear infinite;
+  }
+  @keyframes topLine { 0% { left: -100%; } 100% { left: 100%; } }
+
+  .title {
+    text-align: center; font-size: 22px; letter-spacing: 4px;
+    margin-bottom: 25px; color: #0ff;
+    text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  .subtitle { text-align: center; font-size: 11px; color: #0aa; letter-spacing: 2px; margin-bottom: 20px; }
+
+  h2.small-title {
+    font-size: 14px; letter-spacing: 3px; color: #0aa;
+    text-align: center; margin-bottom: 18px; text-shadow: 0 0 8px #0aa;
+  }
+
+  /* ===== INPUT ===== */
+  .input-group { position: relative; margin-bottom: 20px; }
+  input[type="text"] {
+    width: 100%; padding: 14px 16px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #0ff; border-radius: 6px;
+    color: #0ff; font-family: 'Courier New', monospace;
+    font-size: 14px; letter-spacing: 2px; outline: none; transition: all 0.3s;
+  }
+  input[type="text"]:focus { box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
+  input::placeholder { color: #055; letter-spacing: 1px; }
+
+  /* ===== BUTTON ===== */
+  .btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 255, 255, 0.25));
+    border: 1px solid #0ff; border-radius: 6px;
+    color: #0ff; font-family: 'Courier New', monospace;
+    font-size: 15px; letter-spacing: 3px; cursor: pointer;
+    transition: all 0.3s; text-shadow: 0 0 8px #0ff;
+    position: relative; overflow: hidden;
+  }
+  .btn:hover {
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.25), rgba(0, 255, 255, 0.45));
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.6);
+    transform: translateY(-2px);
+  }
+  .btn:active { transform: translateY(0); }
+
+  /* ===== OPTIONS ===== */
+  .options {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 15px; margin-top: 10px;
+  }
+  .opt-btn {
+    padding: 30px 10px;
+    background: rgba(0, 30, 35, 0.7);
+    border: 1px solid #0ff; border-radius: 8px;
+    color: #0ff; font-family: 'Courier New', monospace;
+    font-size: 15px; letter-spacing: 2px; cursor: pointer;
+    transition: all 0.3s; text-shadow: 0 0 8px #0ff;
+    position: relative; overflow: hidden;
+  }
+  .opt-btn::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(0,255,255,0.15) 50%, transparent 70%);
+    transform: translateX(-100%); transition: transform 0.5s;
+  }
+  .opt-btn:hover::after { transform: translateX(100%); }
+  .opt-btn:hover {
+    background: rgba(0, 60, 70, 0.8);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    transform: scale(1.03);
+  }
+
+  /* ===== LOADING ===== */
+  .loader-box { text-align: center; padding: 40px 25px; }
+  .circle-wrap { width: 160px; height: 160px; margin: 0 auto 25px; position: relative; }
+  .circle-wrap svg { transform: rotate(-90deg); }
+  .circle-bg { fill: none; stroke: rgba(0, 255, 255, 0.15); stroke-width: 6; }
+  .circle-progress {
+    fill: none; stroke: #0ff; stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 440; stroke-dashoffset: 440;
+    filter: drop-shadow(0 0 6px #0ff);
+    transition: stroke-dashoffset 0.1s linear;
+  }
+  .percent {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px; color: #0ff;
+    text-shadow: 0 0 15px #0ff; font-weight: bold;
+  }
+  .loading-text {
+    color: #0aa; font-size: 12px; letter-spacing: 3px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* ===== OFFSET PANEL ===== */
+  .offset-panel {
+    margin-top: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #0ff; border-radius: 6px;
+    padding: 15px; font-size: 11px; line-height: 1.7;
+    max-height: 420px; overflow-y: auto;
+    box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.1);
+  }
+  .offset-panel::-webkit-scrollbar { width: 6px; }
+  .offset-panel::-webkit-scrollbar-thumb { background: #0ff; border-radius: 3px; }
+  .offset-panel::-webkit-scrollbar-track { background: rgba(0,255,255,0.05); }
+
+  .offset-row {
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(0, 255, 255, 0.15);
+  }
+  .offset-row:last-child { border-bottom: none; }
+
+  .offset-addr { color: #fa0; text-shadow: 0 0 5px #fa0; font-weight: bold; }
+  .offset-hex { color: #0ff; text-shadow: 0 0 5px #0ff; word-break: break-all; display: block; margin-top: 3px; }
+  .offset-hex.orig { color: #0aa; }
+  .offset-hex.patch { color: #0f8; }
+
+  .hex-label { color: #0aa; font-size: 10px; letter-spacing: 1px; }
+
+  .back-btn {
+    margin-top: 18px; width: 100%; padding: 12px;
+    background: transparent; border: 1px solid #0aa; border-radius: 6px;
+    color: #0aa; font-family: 'Courier New', monospace;
+    font-size: 13px; letter-spacing: 2px; cursor: pointer; transition: all 0.3s;
+  }
+  .back-btn:hover {
+    color: #0ff; border-color: #0ff;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+  }
+
+  .telegram {
+    position: fixed; bottom: 15px; right: 15px; z-index: 20;
+    color: #0ff; font-size: 12px; letter-spacing: 1px;
+    text-decoration: none; padding: 8px 14px;
+    border: 1px solid #0ff; border-radius: 20px;
+    background: rgba(0, 20, 25, 0.9);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+    transition: all 0.3s;
+  }
+  .telegram:hover {
+    background: rgba(0, 255, 255, 0.15);
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.7);
+  }
+
+  .error {
+    color: #f55; text-align: center; font-size: 12px;
+    margin-top: 10px; letter-spacing: 1px;
+    text-shadow: 0 0 8px #f55; animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  .warning {
+    text-align: center; color: #fa0; font-size: 13px;
+    letter-spacing: 2px; padding: 40px 20px;
+    text-shadow: 0 0 10px #fa0;
+    animation: pulse 1.5s infinite;
+  }
+
+  .copy-btn {
+    margin-top: 10px; width: 100%; padding: 10px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid #0aa; border-radius: 6px;
+    color: #0aa; font-family: 'Courier New', monospace;
+    font-size: 12px; letter-spacing: 2px; cursor: pointer;
+    transition: all 0.3s;
+  }
+  .copy-btn:hover {
+    background: rgba(0, 255, 255, 0.25);
+    color: #0ff; border-color: #0ff;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-lines">
+  <div class="line"></div><div class="line"></div><div class="line"></div>
+  <div class="line"></div><div class="line"></div><div class="line"></div>
+  <div class="vline"></div><div class="vline"></div><div class="vline"></div><div class="vline"></div>
+</div>
+
+<div class="gear g1">⚙</div>
+<div class="gear g2">⚙</div>
+<div class="gear g3">⚙</div>
+<div class="gear g4">⚙</div>
+
+<div id="sparks"></div>
+
+<a href="https://t.me/dolong07" target="_blank" class="telegram">✈ @dolong07</a>
+
+<div class="container">
+
+  <!-- LOGIN -->
+  <div class="screen active" id="screen-login">
+    <div class="box">
+      <div class="title">DOLONG SYSTEM</div>
+      <div class="subtitle">// AUTHENTICATION REQUIRED</div>
+      <div class="input-group">
+        <input type="text" id="keyInput" placeholder="ENTER KEY..." autocomplete="off">
+      </div>
+      <button class="btn" onclick="checkKey()">ĐĂNG NHẬP</button>
+      <div id="loginError"></div>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="screen" id="screen-loading">
+    <div class="box loader-box">
+      <div class="circle-wrap">
+        <svg width="160" height="160">
+          <circle class="circle-bg" cx="80" cy="80" r="70"></circle>
+          <circle class="circle-progress" id="progressCircle" cx="80" cy="80" r="70"></circle>
+        </svg>
+        <div class="percent" id="percentText">0%</div>
+      </div>
+      <div class="loading-text" id="loadingText">INITIALIZING...</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="screen" id="screen-main">
+    <div class="box">
+      <h2 class="small-title">// CHỌN CHỨC NĂNG</h2>
+      <div class="options">
+        <button class="opt-btn" onclick="goTo('screen-aim')">AIM</button>
+        <button class="opt-btn" onclick="goTo('screen-chams')">CHAMS</button>
+      </div>
+      <button class="back-btn" onclick="goTo('screen-login')">← ĐĂNG XUẤT</button>
+    </div>
+  </div>
+
+  <!-- AIM -->
+  <div class="screen" id="screen-aim">
+    <div class="box">
+      <h2 class="small-title">// AIM MODULE</h2>
+      <div class="options">
+        <button class="opt-btn" onclick="goTo('screen-cache')">CACHE</button>
+        <button class="opt-btn" onclick="goTo('screen-avatar')">AVATAR</button>
+      </div>
+      <button class="back-btn" onclick="goTo('screen-main')">← QUAY LẠI</button>
+    </div>
+  </div>
+
+  <!-- CACHE -->
+  <div class="screen" id="screen-cache">
+    <div class="box">
+      <h2 class="small-title">// CACHE — AIM TYPES</h2>
+      <div class="options">
+        <button class="opt-btn" onclick="showOffset('CACHE','AIM DRAG')">AIM DRAG</button>
+        <button class="opt-btn" onclick="showOffset('CACHE','AIM MAGIC')">AIM MAGIC</button>
+        <button class="opt-btn" onclick="showOffset('CACHE','AIM NECK')">AIM NECK</button>
+        <button class="opt-btn" onclick="showOffset('CACHE','AIM BODY')">AIM BODY</button>
+      </div>
+      <button class="opt-btn" style="width:100%;margin-top:15px;padding:16px;" onclick="showOffset('CACHE','NHẸ TÂM')">NHẸ TÂM</button>
+      <div id="cacheOffsetDisplay"></div>
+      <button class="back-btn" onclick="goTo('screen-aim')">← QUAY LẠI</button>
+    </div>
+  </div>
+
+  <!-- AVATAR -->
+  <div class="screen" id="screen-avatar">
+    <div class="box">
+      <h2 class="small-title">// AVATAR — AIM TYPES</h2>
+      <div class="options">
+        <button class="opt-btn" onclick="showOffset('AVATAR','AIM CHEST')">AIM CHEST</button>
+        <button class="opt-btn" onclick="showOffset('AVATAR','AIM HEAD')">AIM HEAD</button>
+        <button class="opt-btn" onclick="showOffset('AVATAR','LOCK NECK')">LOCK NECK</button>
+        <button class="opt-btn" onclick="showOffset('AVATAR','DRAG ANTENA')">DRAG ANTENA</button>
+      </div>
+      <button class="opt-btn" style="width:100%;margin-top:15px;padding:16px;" onclick="showOffset('AVATAR','DỊ TẬT')">DỊ TẬT</button>
+      <div id="avatarOffsetDisplay"></div>
+      <button class="back-btn" onclick="goTo('screen-aim')">← QUAY LẠI</button>
+    </div>
+  </div>
+
+  <!-- CHAMS -->
+  <div class="screen" id="screen-chams">
+    <div class="box">
+      <h2 class="small-title">// CHAMS MODULE</h2>
+      <div class="options">
+        <button class="opt-btn" onclick="chamsWarning('NHÂN VẬT')">NHÂN VẬT</button>
+        <button class="opt-btn" onclick="chamsWarning('SÚNG')">SÚNG</button>
+      </div>
+      <div id="chamsDisplay"></div>
+      <button class="back-btn" onclick="goTo('screen-main')">← QUAY LẠI</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // SPARKS
+  const sparksContainer = document.getElementById('sparks');
+  for (let i = 0; i < 25; i++) {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.animationDelay = Math.random() * 4 + 's';
+    s.style.animationDuration = (3 + Math.random() * 3) + 's';
+    sparksContainer.appendChild(s);
+  }
+
+  // NAV
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  // KEY
+  const VALID_KEY = 'DOLONG-FREE';
+  function checkKey() {
+    const val = document.getElementById('keyInput').value.trim();
+    const errBox = document.getElementById('loginError');
+    errBox.innerHTML = '';
+    if (!val) { errBox.innerHTML = '<div class="error">⚠ VUI LÒNG NHẬP KEY</div>'; return; }
+    if (val !== VALID_KEY) { errBox.innerHTML = '<div class="error">✖ KEY KHÔNG HỢP LỆ</div>'; return; }
+    goTo('screen-loading');
+    startLoading();
+  }
+  document.getElementById('keyInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkKey();
+  });
+
+  // LOADING
+  function startLoading() {
+    const circle = document.getElementById('progressCircle');
+    const percentText = document.getElementById('percentText');
+    const loadingText = document.getElementById('loadingText');
+    const circumference = 440;
+    const messages = ['INITIALIZING...','LOADING MODULES...','CONNECTING SERVER...','VERIFYING KEY...','INJECTING...','DONE!'];
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 3 + 1;
+      if (progress >= 100) progress = 100;
+      circle.style.strokeDashoffset = circumference - (progress / 100) * circumference;
+      percentText.textContent = Math.floor(progress) + '%';
+      const msgIndex = Math.min(Math.floor(progress / 20), messages.length - 1);
+      loadingText.textContent = messages[msgIndex];
+      if (progress >= 100) {
+        clearInterval(interval);
+        setTimeout(() => goTo('screen-main'), 600);
+      }
+    }, 60);
+  }
+
+  // ===== OFFSET DATA =====
+  // Format: { addr, hex } — hex là chuỗi bytes
+  // Nếu có orig+patch → object { addr, orig, patch }
+  const DATA = {
+    'AIM DRAG': [
+      { addr: '0x10',   hex: '01 00 00 00 83 C0 CA 3D E4 8C 02 3E 00 00 00 00' },
+      { addr: '0xB0',   hex: '01 00 00 00 83 C0 CA 3D E4 8C 02 3E 00 00 00 00' },
+      { addr: '0xD300', hex: '01 00 00 00 83 C0 CA 3D E4 8C 02 3E 00 00 00 00' },
+      { addr: '0xD5F0', hex: '01 00 00 00 83 C0 CA 3D 72 83 05 3E 00 00 00 00' }
+    ],
+    'AIM MAGIC': [
+      { addr: '0xD304', orig: 'A8 E7 71 3D', patch: '5E D4 CA 3D' },
+      { addr: '0xD308', orig: 'E4 8C 02 3E', patch: 'E5 8C 02 3E' },
+      { addr: '0xD310', orig: 'DC 52 39 BD', patch: 'FC E0 F7 3D' },
+      { addr: '0xD314', orig: '27 C1 8B 3C', patch: '96 99 A4 3C' },
+      { addr: '0xD318', orig: 'C0 D0 F8 B9', patch: '1F 86 EF B9' },
+      { addr: '0xD5F4', orig: '72 4B 72 3D', patch: 'B0 D1 CA 3D' },
+      { addr: '0xD600', orig: '18 04 27 BD', patch: '4E 48 F7 3D' },
+      { addr: '0xD604', orig: '00 84 A7 37', patch: '55 37 8D 3C' },
+      { addr: '0xD608', orig: '00 00 80 B1', patch: '6C 03 F3 B9' }
+    ],
+    'AIM NECK': [
+      { addr: '0xB0',   hex: '32 30 32 32 2E 33 2E 34 37 66 31 00 09 00 00 00' },
+      { addr: '0xD300', hex: '01 00 00 00 59 DF CA 3D E4 8C 02 3E 00 00 00 00' },
+      { addr: '0xD310', hex: '8D DE AB BB 27 C1 8B 3C C0 D0 F8 B9 00 00 00 00' },
+      { addr: '0xD5F0', hex: '01 00 00 00 3E 11 CB 3D 72 83 05 3E 00 00 00 00' },
+      { addr: '0xD600', hex: '7C 61 A6 BB 00 84 A7 37 00 00 80 B1 00 00 00 00' }
+    ],
+    'AIM BODY': [
+      { addr: '0xD304', orig: 'A8 E7 71 3D', patch: '5E D4 CA 3D' },
+      { addr: '0xD308', orig: 'E4 8C 02 3E', patch: 'E5 8C 02 3E' },
+      { addr: '0xD310', orig: 'DC 52 39 BD', patch: 'FC E0 F7 3D' },
+      { addr: '0xD314', orig: '27 C1 8B 3C', patch: '96 99 A4 3C' },
+      { addr: '0xD318', orig: 'C0 D0 F8 B9', patch: '1F 86 EF B9' },
+      { addr: '0xD5F4', orig: '72 4B 72 3D', patch: 'B0 D1 CA 3D' },
+      { addr: '0xD600', orig: '18 04 27 BD', patch: '4E 48 F7 3D' },
+      { addr: '0xD604', orig: '00 84 A7 37', patch: '55 37 8D 3C' },
+      { addr: '0xD608', orig: '00 00 80 B1', patch: '6C 03 F3 B9' }
+    ],
+    'NHẸ TÂM': [
+      { addr: '0xD300', orig: 'A8 E7 71', patch: '59 DF CA' },
+      { addr: '0xD310', orig: 'BD', patch: '3D' },
+      { addr: '0xD5F4', orig: '72 4B 72', patch: '3E 11 CB' },
+      { addr: '0xD600', orig: 'BD', patch: '3D' }
+    ],
+    'AIM CHEST': [
+      { addr: '0x10',   hex: '78 00 32 30 31 38 2E 34 2E 31 32 66 31 00 00 00' },
+      { addr: '0xB0',   hex: '32 30 31 38 2E 34 2E 31 32 66 31 00 09 00 00 00' },
+      { addr: '0xCC00', hex: '00 00 00 00 00 00 00 00 01 00 00 00 29 5C 8F 3D' },
+      { addr: '0xCC10', hex: '29 5C 8F 3D 02 00 00 00 7D 1A 89 BD 50 26 9F 3B' },
+      { addr: '0xD300', hex: '01 00 00 00 06 EF CA 3D E4 8C 02 3E 00 00 00 00' },
+      { addr: '0xD310', hex: '71 E8 2D BC 29 C1 8B 3C C0 D0 F8 B9 00 00 00 00' },
+      { addr: '0xD5F0', hex: '01 00 00 00 B3 07 CB 3D 72 83 05 3E 00 00 00 00' },
+      { addr: '0xD600', hex: '83 23 33 BC 40 85 A7 37 00 00 80 B1 00 00 00 00' },
+      { addr: '0xDE90', hex: '00 00 00 00 00 00 00 00 01 00 00 00 29 5C 8F 3D' },
+      { addr: '0xDEA0', hex: '29 5C 8F 3D 00 00 00 00 0A D7 A3 BD 0A D7 23 BC' }
+    ],
+    'AIM HEAD': [
+      { addr: '0x10',   hex: '78 00 32 30 31 38 2E 34 2E 31 32 66 31 00 00 00' },
+      { addr: '0xB0',   hex: '32 30 31 38 2E 34 2E 31 32 66 31 00 09 00 00 00' },
+      { addr: '0xCC00', hex: '00 00 00 00 00 00 00 00 01 00 00 00 29 5C 8F 3D' },
+      { addr: '0xCC10', hex: '29 5C 8F 3D 02 00 00 00 7D 1A 89 BD 50 26 9F 3B' },
+      { addr: '0xD300', hex: '01 00 00 00 06 EF CA 3D E4 8C 02 3E 00 00 00 00' },
+      { addr: '0xD310', hex: '71 E8 2D BC 29 C1 8B 3C C0 D0 F8 B9 00 00 00 00' },
+      { addr: '0xD5F0', hex: '01 00 00 00 B3 07 CB 3D 72 83 05 3E 00 00 00 00' },
+      { addr: '0xD600', hex: '83 23 33 BC 40 85 A7 37 00 00 80 B1 00 00 00 00' }
+    ],
+    'LOCK NECK': [
+      { addr: '0xD300', hex: '01 00 00 00 3B 1C CC 3D 8C E0 0C 3E 00 00 00 00' },
+      { addr: '0xD310', hex: '6C 11 0F 3D 27 C1 8B 3C C0 D0 F8 B9 00 00 00 00' },
+      { addr: '0xD5F0', hex: '01 00 00 00 B6 AC CB 3D D4 BF 0F 3E 00 00 00 00' },
+      { addr: '0xD600', hex: '7E B8 22 3D 00 84 A7 37 00 00 80 B1 00 00 00 00' }
+    ],
+    'DRAG ANTENA': [
+      { addr: '0x64B0', hex: '00 00 00 00 00 00 00 00 00 00 00 00 00 00 FA 43' },
+      { addr: '0x7140', hex: '74 54 6F 65 55 17 F9 B4 31 69 74 EB 89 29 C5 BE' },
+      { addr: '0x7150', hex: '16 DC 98 BD BB 82 97 B4 00 00 00 00 BF B2 2F 3F' },
+      { addr: '0x7160', hex: '43 32 73 36 66 03 7B 35 00 00 C0 3F 00 00 C0 3F' },
+      { addr: '0x7170', hex: '00 00 C0 3F 10 00 00 00 62 6F 6E 65 5F 48 65 61' },
+      { addr: '0x7180', hex: '64 00 00 00 00 00 00 00 00 23 AA A6 B8 B2 F7 1F A4' },
+      { addr: '0x9920', hex: '00 00 00 00 00 00 00 00 00 00 FA 43 13 13 17 3E' },
+      { addr: '0xA3D0', hex: '10 00 00 00 62 6F 6E 65 5F 71 70 68 75 6E 67 69' },
+      { addr: '0xA3E0', hex: '6F 73 00 00 23 AA A6 B8 46 0A CD 70 85 98 03 BE' }
+    ],
+    'DỊ TẬT': [
+      { addr: '0x7660', hex: '00 00 80 3F 09 00 00 00 62 6F 6E 65 5F 48 69 70' },
+      { addr: '0x7670', hex: '73 00 00 00 A1 58 C3 05 B2 F7 1F A4 E1 2C 3B BD' },
+      { addr: '0x7970', hex: '00 00 80 3F 09 00 00 00 62 6F 6E 65 5F 4E 65 63' },
+      { addr: '0x7980', hex: '6B 00 00 00 DD 27 31 5B 24 1A 56 78 47 7B 5A BD' },
+      { addr: '0xA880', hex: '62 6F 6E 65 5F 48 69 70 73 00 00 00 A1 58 C3 05' },
+      { addr: '0xAB40', hex: 'FF FF 7F 3F 09 00 00 00 62 6F 6E 65 5F 4E 65 63' },
+      { addr: '0xAB50', hex: '6B 00 00 00 DD 27 31 5B 24 1A 56 78 8F 6E 38 BD' }
+    ]
+  };
+
+  function renderRows(name, data) {
+    let html = '';
+    data.forEach(row => {
+      html += `<div class="offset-row">`;
+      html += `<span class="offset-addr">${row.addr}</span>`;
+      if (row.orig && row.patch) {
+        html += `<span class="offset-hex orig"><span class="hex-label">GỐC:</span> ${row.orig}</span>`;
+        html += `<span class="offset-hex patch"><span class="hex-label">SỬA:</span> ${row.patch}</span>`;
+      } else {
+        html += `<span class="offset-hex"><span class="hex-label">HEX:</span> ${row.hex}</span>`;
+      }
+      html += `</div>`;
+    });
+    return html;
+  }
+
+  function showOffset(group, name) {
+    const targetId = group === 'CACHE' ? 'cacheOffsetDisplay' : 'avatarOffsetDisplay';
+    const panel = document.getElementById(targetId);
+
+    if (panel.dataset.current === name) {
+      panel.innerHTML = '';
+      panel.dataset.current = '';
+      return;
+    }
+
+    const data = DATA[name] || [];
+    let html = `<div class="offset-panel">
+      <div style="text-align:center;color:#0ff;margin-bottom:10px;letter-spacing:2px;font-size:13px;">▸ ${name} ◂</div>`;
+    html += renderRows(name, data);
+    html += `</div>`;
+    html += `<button class="copy-btn" onclick="copyOffset('${name}')">📋 COPY OFFSET</button>`;
+    panel.innerHTML = html;
+    panel.dataset.current = name;
+  }
+
+  function copyOffset(name) {
+    const data = DATA[name] || [];
+    let text = `=== ${name} ===\n`;
+    data.forEach(row => {
+      if (row.orig && row.patch) {
+        text += `${row.addr}  ${row.orig}  ->  ${row.patch}\n`;
+      } else {
+        text += `${row.addr}  ${row.hex}\n`;
+      }
+    });
+    navigator.clipboard.writeText(text).then(() => {
+      const btns = document.querySelectorAll('.copy-btn');
+      btns.forEach(b => { if (b.textContent.includes('COPY')) { 
+        const orig = b.textContent; b.textContent = '✅ ĐÃ COPY!'; 
+        setTimeout(()=>b.textContent = orig, 1200); 
+      }});
+    });
+  }
+
+  function chamsWarning(name) {
+    const panel = document.getElementById('chamsDisplay');
+    panel.innerHTML = `<div class="warning">⚠ ${name} — CHƯA CÓ OFFSET ⚠</div>`;
+  }
+</script>
+
+</body>
+</html>
